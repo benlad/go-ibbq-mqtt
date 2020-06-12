@@ -8,4 +8,4 @@ RUN adduser -S -D -H -h /app appuser
 USER appuser
 COPY --from=builder /build/go-ibbq-mqtt /app/
 WORKDIR /app
-CMD ["LOGXI=*=INF" "/app/go-ibbq-mqtt"]
+CMD ["/app/go-ibbq-mqtt"]
