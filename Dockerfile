@@ -3,7 +3,7 @@ RUN mkdir /build
 ADD . /build/
 WORKDIR /build 
 RUN GOOS=linux go build
-FROM alpine
+FROM arm32v7/alpine
 RUN adduser -S -D -H -h /app appuser
 USER appuser
 COPY --from=builder /build/go-ibbq-mqtt /app/
