@@ -1,3 +1,7 @@
+github.com/benlad/go-ibbq/v2 v2.0.0-20190518104154-1666ba2fc9c8 h1:EeI2z0EyZqpTFRhFyYpNMRIQQ1JaJHFvNL7tUyvu1Ec=
+github.com/benlad/go-ibbq/v2 v2.0.0-20190518104154-1666ba2fc9c8/go.mod h1:ZBbwpbH0t1YQ+bVw1V+awpQPQLlgu1u2GMg9ZhuAZdo=
+github.com/benlad/go-ibbq/v2 v2.0.0 h1:Ya4ev2vVY+X8Htwpo94krfG3RCLBLRSF3L4ct8pSUl8=
+github.com/benlad/go-ibbq/v2 v2.0.0/go.mod h1:ZBbwpbH0t1YQ+bVw1V+awpQPQLlgu1u2GMg9ZhuAZdo=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.2.0 h1:1F8mhG9+aO5/xpdtFkW4SxOJB67ukuDC3t2y2qayIX0=

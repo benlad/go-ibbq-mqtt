@@ -10,3 +10,8 @@ require (
 	github.com/sworisbreathing/go-ibbq/v2 v2.0.0-20190518104154-1666ba2fc9c8
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 )
+
+//replace github.com/sworisbreathing/go-ibbq/v2 => github.com/benlad/go-ibbq/v2 v2.0.0
+replace github.com/sworisbreathing/go-ibbq/v2 => /home/ubuntu/go/src/go-ibbq
+
+//replace github.com/sworisbreathing/go-ibbq/v2 => github.com/benlad/go-ibbq/v2 v2.0.0

@@ -12,6 +12,7 @@ import (
 type MqttClient interface {
 	Init()
 	Pub(topic string, payload interface{})
+	PubRaw(topic string, payload interface{})
 }
 
 // mqttClient implements the MqttClient interface, encapsulating the paho.mqtt.golang module.
@@ -46,6 +47,18 @@ func (m *mqttClient) Pub(topic string, payload interface{}) {
 
 	logger.Info("Publishing to mqtt", "topic", t)
 	statustoken := m.client.Publish(t, 0, false, payload)
+
+	statustoken.Wait()
+	if statustoken.Error() != nil {
+		logger.Error("Error publishing to mqtt", "err", statustoken.Error())
+	}
+}
+
+func (m *mqttClient) PubRaw(topic string, payload interface{}) {
+	t := topic
+
+	logger.Info("Publishing to mqtt", "topic", t)
+	statustoken := m.client.Publish(t, 0, true, payload)
 
 	statustoken.Wait()
 	if statustoken.Error() != nil {
