@@ -10,6 +10,7 @@ import (
 
 // The capitalized filed names are exported and thus end up in JSON
 type AutoDiscoverConfigMessage struct {
+	addr              string
 	id                string
 	sensorNum         int
 	Name              string `json:"name"`
@@ -20,35 +21,41 @@ type AutoDiscoverConfigMessage struct {
 	ValueTemplate     string `json:"value_template"`
 }
 
-type StateMessage struct {
-	Temperature float64 `json:"temperature"`
-}
-type StateMessages map[string]float64
+type StateMessages map[string]int
 
-func GetMessageObjectId(id string) string {
+type BatteryLevelStateMessage struct {
+	BatteryLevel string `json:"battery"`
+}
+
+func GetMessageObjectId(addr string) string {
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	uniqueId := reg.ReplaceAllString(id, "")
+	uniqueId := reg.ReplaceAllString(addr, "")
 	return "inkbird_" + uniqueId
 }
 
-func GetMessageStateTopic(id string) string {
-	return GetMessageObjectId(id) + "/state"
+func GetMessageStateTopicTemperatures(addr string) string {
+	return GetMessageObjectId(addr) + "/temperatures"
 }
 
-func NewTemperatureSensorConfigMessage(sensorNum int, id string) AutoDiscoverConfigMessage {
+func GetMessageStateTopicDevice(addr string) string {
+	return GetMessageObjectId(addr) + "/device"
+}
+
+func NewTemperatureSensorConfigMessage(sensorNum int, addr string) AutoDiscoverConfigMessage {
 	temperatureNumbered := "temperature" + strconv.Itoa(sensorNum)
 
 	autoDiscoverConfigMessage := AutoDiscoverConfigMessage{}
 	autoDiscoverConfigMessage.sensorNum = sensorNum
-	autoDiscoverConfigMessage.id = GetMessageObjectId(id)
+	autoDiscoverConfigMessage.addr = addr
+	autoDiscoverConfigMessage.id = GetMessageObjectId(addr)
 	autoDiscoverConfigMessage.Name = autoDiscoverConfigMessage.id + "_" + temperatureNumbered
-	autoDiscoverConfigMessage.DeviceClass = "temperature"
-	autoDiscoverConfigMessage.StateTopic = autoDiscoverConfigMessage.id
-	autoDiscoverConfigMessage.UnitOfMeasurement = "°C"
 	autoDiscoverConfigMessage.UniqueId = autoDiscoverConfigMessage.id + "_" + temperatureNumbered
+	autoDiscoverConfigMessage.DeviceClass = "temperature"
+	autoDiscoverConfigMessage.StateTopic = GetMessageStateTopicTemperatures(autoDiscoverConfigMessage.addr)
+	autoDiscoverConfigMessage.UnitOfMeasurement = "°C"
 	autoDiscoverConfigMessage.ValueTemplate = "{{value_json.temperature" + strconv.Itoa(sensorNum) + "}}"
 	return autoDiscoverConfigMessage
 }
@@ -62,23 +69,33 @@ func (autoDiscoverConfigMessage *AutoDiscoverConfigMessage) SetConfigMessageSens
 	autoDiscoverConfigMessage.ValueTemplate = "{{value_json." + temperatureNumbered + "}}"
 }
 
+func NewTemperatureSensorBatteryConfigMessage(addr string) AutoDiscoverConfigMessage {
+	autoDiscoverConfigMessage := AutoDiscoverConfigMessage{}
+	autoDiscoverConfigMessage.addr = addr
+	autoDiscoverConfigMessage.id = GetMessageObjectId(addr)
+	autoDiscoverConfigMessage.Name = autoDiscoverConfigMessage.id + "_battery"
+	autoDiscoverConfigMessage.UniqueId = autoDiscoverConfigMessage.id + "_battery"
+	autoDiscoverConfigMessage.DeviceClass = "battery"
+	autoDiscoverConfigMessage.StateTopic = GetMessageStateTopicDevice(autoDiscoverConfigMessage.addr)
+	autoDiscoverConfigMessage.UnitOfMeasurement = "%"
+	autoDiscoverConfigMessage.ValueTemplate = "{{value_json.battery}}"
+	return autoDiscoverConfigMessage
+}
+
 func (autoDiscoverConfigMessage *AutoDiscoverConfigMessage) toJson() string {
 	j, _ := json.Marshal(autoDiscoverConfigMessage)
 
 	return string(j)
 }
 
-// func NewStateMessages(temperatures []float64) StateMessages {
-// 	//	stateMessage := StateMessage{}
-// 	stateMessages := StateMessages{}
-// 	for i, _ := range temperatures {
-// 		//		stateMessage.Temperature = temperatures[i]
-// 		stateMessages = append(stateMessages, StateMessage{Temperature: temperatures[i]})
-// 	}
-// 	return stateMessages
-// }
+func NewBatteryStateMessageJson(batteryLevel int) string {
+	batteryLevelStateMessage := BatteryLevelStateMessage{BatteryLevel: strconv.Itoa(batteryLevel)}
+	j, _ := json.Marshal(batteryLevelStateMessage)
 
-func NewStateMessages(temperatures []float64) StateMessages {
+	return string(j)
+}
+
+func NewStateMessages(temperatures []int) StateMessages {
 	stateMessages := StateMessages{}
 	for i, _ := range temperatures {
 		stateMessages["temperature"+strconv.Itoa(i+1)] = temperatures[i]

@@ -33,9 +33,10 @@ import (
 
 var logger = log.New("main")
 var mc = NewMqttClient()
+var batteryLevelConfigMessage AutoDiscoverConfigMessage
 var tempSensorConfigMessage AutoDiscoverConfigMessage
 
-func temperatureReceived(temperatures []float64) {
+func temperatureReceived(temperatures []int) {
 	logger.Info("Received temperature data", "temperatures", temperatures)
 
 	stateMessages := NewStateMessages(temperatures)
@@ -51,8 +52,14 @@ func temperatureReceived(temperatures []float64) {
 func batteryLevelReceived(level int) {
 	logger.Info("Received battery data", "batteryPct", strconv.Itoa(level))
 
-	b := &batteryLevel{level}
-	mc.Pub("batterylevel", b.toJson())
+	batteryLevelStateMessage := NewBatteryStateMessageJson(level)
+
+	if getEnvBool("HA_AUTO_DISCOVERY") {
+		mc.PubRaw(batteryLevelConfigMessage.StateTopic, batteryLevelStateMessage)
+	} else {
+		b := &batteryLevel{level}
+		mc.Pub("batterylevel", b.toJson())
+	}
 }
 
 func statusUpdated(ibbqStatus ibbq.Status) {
@@ -87,7 +94,7 @@ func (bbq *debug_bbq) GetAddr() string {
 
 func initializeiBbq(ctx context.Context, cancel context.CancelFunc, done chan struct{}) {
 	logger.Debug("instantiating ibbq structs")
-	//	bbq := debug_bbq{Addr: "fg:11:ab:22:cd:33"}
+	//bbq := debug_bbq{Addr: "fg:11:ab:22:cd:33"}
 
 	var err error
 	var bbq ibbq.Ibbq
@@ -107,19 +114,23 @@ func initializeiBbq(ctx context.Context, cancel context.CancelFunc, done chan st
 		logger.Fatal("Error connecting to device", "err", err)
 	} else if getEnvBool("HA_AUTO_DISCOVERY") {
 		logger.Info("Publish for Home Assistant MQTT auto discovery", "status")
+
+		batteryLevelConfigMessage = NewTemperatureSensorBatteryConfigMessage(bbq.GetAddr())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/battery/config", batteryLevelConfigMessage.toJson())
+
 		tempSensorConfigMessage = NewTemperatureSensorConfigMessage(1, bbq.GetAddr())
 		//		tempSensorconfigMessage := &AutoDiscoverConfigMessage{name: "temperature1", device_class: "temperature", state_topic: "ibbq/state", unit_of_measurement: "°C", value_template: "{{ value_json.temperature}}"}
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature1", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature1/config", tempSensorConfigMessage.toJson())
 		tempSensorConfigMessage.SetConfigMessageSensorNumber(2)
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature2", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature2/config", tempSensorConfigMessage.toJson())
 		tempSensorConfigMessage.SetConfigMessageSensorNumber(3)
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature3", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature3/config", tempSensorConfigMessage.toJson())
 		tempSensorConfigMessage.SetConfigMessageSensorNumber(4)
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature4", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature4/config", tempSensorConfigMessage.toJson())
 		tempSensorConfigMessage.SetConfigMessageSensorNumber(5)
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature5", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature5/config", tempSensorConfigMessage.toJson())
 		tempSensorConfigMessage.SetConfigMessageSensorNumber(6)
-		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/config/temperature6", tempSensorConfigMessage.toJson())
+		mc.PubRaw("homeassistant/sensor/"+GetMessageObjectId(bbq.GetAddr())+"/temperature6/config", tempSensorConfigMessage.toJson())
 	}
 	logger.Info("Connected to device")
 }

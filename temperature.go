@@ -3,7 +3,7 @@ package main
 import "encoding/json"
 
 type temperature struct {
-	Temperatures []float64
+	Temperatures []int
 }
 
 func (t *temperature) toJson() string {
