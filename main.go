@@ -35,8 +35,8 @@ import (
 var logger = log.New("main")
 var mc = NewMqttClient()
 var bbq ibbq.Ibbq
-var batteryLevelConfigMessage AutoDiscoverConfigMessage
-var tempSensorConfigMessage AutoDiscoverConfigMessage
+var batteryLevelConfigMessage AutoDiscoverSensorConfigMessage
+var tempSensorConfigMessage AutoDiscoverSensorConfigMessage
 
 var unitsChangeMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	payloadStr := string(msg.Payload())
@@ -157,9 +157,11 @@ func initializeiBbq(ctx context.Context, cancel context.CancelFunc, done chan st
 			availabilityStateMessage := NewAvailabilityStateMessageJson(Online)
 			mc.PubRaw(GetMessageStateTopicAvailability(bbq.GetAddr()), availabilityStateMessage)
 
-			//			switchConfigMessage := NewUnitsSwitchConfigMessage(bbq.GetAddr())
-			mc.SubRaw(GetMessageObjectId(bbq.GetAddr())+"/units", unitsChangeMessageHandler)
-			// inkbird_f8300232744d/units
+			switchConfigMessage := NewUnitsSwitchConfigMessage(bbq.GetAddr())
+			mc.PubRaw("homeassistant/switch/"+GetMessageObjectId(bbq.GetAddr())+"/units/config", switchConfigMessage.toJson())
+			mc.PubRaw(switchConfigMessage.CommandTopic, NewUnitsSwitchCommandMessageJson(Celsius))
+
+			mc.SubRaw(switchConfigMessage.CommandTopic, unitsChangeMessageHandler)
 		}
 	}
 	logger.Info("Connected to device")
